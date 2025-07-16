@@ -1,6 +1,7 @@
 import type { Piece, PieceLocation } from "../interface";
+import { isKingInCheck } from "./isKingInCheck";
 
-export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
+export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][], isInCheck?: boolean): boolean => {
     let isAllowed = false;
     switch (selectedPiece.type) {
         case "pawn": {
@@ -30,10 +31,20 @@ export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocati
         default:
             break;
     }
+    // Calculate if the king is in check after the chosen action 
+    if (isInCheck) {
+        // Simulate the move
+        const simulatedBoard = board.map(row => [...row]);
+        simulatedBoard[newRow][newCol] = { ...selectedPiece, hasMoved: true };
+        simulatedBoard[selectedPieceLocation.oldRow][selectedPieceLocation.oldCol] = null;
+
+        // Prevent the move if it doesn't remove the check
+        const stillInCheck = isKingInCheck(simulatedBoard, selectedPiece.color);
+        if (stillInCheck) return false;
+    }
 
     return isAllowed;
 }
-
 
 const checkIfPawnMovementIsAllowed = (color: string, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
     const { oldRow, oldCol } = selectedPieceLocation;

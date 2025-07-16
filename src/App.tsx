@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import Board from './components/Board'
 import type { Piece, PieceLocation } from './interface'
 import { checkIfAllowedMovement } from './utils/checkIfAllowedMovement'
+import { isKingInCheck } from './utils/isKingInCheck'
 
 const initialBoard = [
   [{ type: 'rook', color: 'black' }, { type: 'knight', color: 'black' }, { type: 'bishop', color: 'black' }, { type: 'queen', color: 'black' }, { type: 'king', color: 'black' }, { type: 'bishop', color: 'black' }, { type: 'knight', color: 'black' }, { type: 'rook', color: 'black' }],
@@ -20,6 +21,14 @@ const App = () => {
   const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null);
   const [selectedPieceLocation, setSelectedPieceLocation] = useState<PieceLocation | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState("white")
+  const [isInCheck, setIsInCheck] = useState<boolean>(false)
+
+  useEffect(() => {
+  const enemyColor = currentPlayer === "white" ? "black" : "white";
+  const inCheck = isKingInCheck(board, enemyColor);
+  setIsInCheck(inCheck)
+
+}, [board, currentPlayer]);
 
   const handleMove = (row: number, col: number, piece?: Piece) => {
     if (piece?.color !== currentPlayer && !selectedPiece) {
@@ -40,7 +49,7 @@ const App = () => {
 
     let newBoard = board.map(row => [...row]);
     const { oldRow, oldCol } = selectedPieceLocation;
-    const isAllowedMovement = checkIfAllowedMovement(selectedPiece, selectedPieceLocation, row, col, board)
+    const isAllowedMovement = checkIfAllowedMovement(selectedPiece, selectedPieceLocation, row, col, board, isInCheck)
 
     if (!isAllowedMovement) {
       setSelectedPiece(null);

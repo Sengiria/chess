@@ -131,11 +131,22 @@ const checkIfKingMovementIsAllowed = (selectedPiece: Piece, selectedPieceLocatio
     const { color, hasMoved } = selectedPiece;
     const rowDiff = Math.abs(newRow - oldRow);
     const colDiff = Math.abs(newCol - oldCol);
+    const rookCol = newCol > oldCol ? 7 : 0;
+    const rook = board[oldRow][rookCol];
+    const isValidRook = rook?.type === "rook" && !rook?.hasMoved;
 
     // 1 move in any direction
     if (rowDiff <= 1 && colDiff <= 1 && (rowDiff !== 0 || colDiff !== 0)) {
         const target = board[newRow][newCol];
         return !target || target.color !== color;
+    }
+    // castling
+    if (!hasMoved && isValidRook && colDiff === 2 && newRow === oldRow) {
+        const step = newCol > oldCol ? 1 : -1;
+        for (let c = oldCol + step; c !== rookCol; c += step) {
+            if (board[oldRow][c]) return false;
+        }
+        return true;
     }
 
     return false;

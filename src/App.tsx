@@ -47,8 +47,16 @@ const App = () => {
       setSelectedPieceLocation(null);
       return;
     }
-    newBoard[row][col] = {...selectedPiece, hasMoved: true};
+
+    newBoard[row][col] = { ...selectedPiece, hasMoved: true };
     newBoard[oldRow][oldCol] = null;
+    // Special case: Castling
+    if (selectedPiece.type === "king" && Math.abs(col - oldCol) === 2 && row === oldRow) {
+      const rookCol = col > selectedPieceLocation.oldCol ? 7 : 0;
+      const newRookCol = col > selectedPieceLocation.oldCol ? col -1 : col + 1;
+      newBoard[row][newRookCol] = {...board[row][rookCol], hasMoved: true}
+      newBoard[row][rookCol] = null;
+    }
     setBoard(newBoard)
     setSelectedPiece(null)
     setCurrentPlayer(prev => prev === 'white' ? 'black' : 'white');

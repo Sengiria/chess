@@ -4,7 +4,10 @@ import { isKingInCheck } from "./isKingInCheck";
 export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][], isInCheck?: boolean): boolean => {
     // Prevent out-of-bounds moves
     if (newRow < 0 || newRow > 7 || newCol < 0 || newCol > 7) return false;
-    
+    if (newRow === selectedPieceLocation.oldRow && newCol === selectedPieceLocation.oldCol) {
+        return false;
+    }
+
     let isAllowed = false;
     switch (selectedPiece.type) {
         case "pawn": {
@@ -176,7 +179,7 @@ export const checkIfHasAnyMoves = (color: string, board: (Piece | null)[][]): bo
                 for (let targetR = 0; targetR < board.length; targetR++) {
                     for (let targetC = 0; targetC < board[targetR].length; targetC++) {
                         const isValid = checkIfAllowedMovement(piece, pieceLocation, targetR, targetC, board, true)
-                        if(isValid) return true;
+                        if (isValid) return true;
                     }
 
                 }

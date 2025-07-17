@@ -49,13 +49,27 @@ const App = () => {
       return;
     }
 
-    // 🔥 simulate the move first
     const { oldRow, oldCol } = selectedPieceLocation;
+
+    const isAllowed = checkIfAllowedMovement(
+      selectedPiece,
+      selectedPieceLocation,
+      row,
+      col,
+      board,
+      isInCheck
+    );
+
+    if (!isAllowed) {
+      setSelectedPiece(null);
+      setSelectedPieceLocation(null);
+      return;
+    }
+
     const newBoard = board.map(row => [...row]);
     newBoard[row][col] = { ...selectedPiece, hasMoved: true };
     newBoard[oldRow][oldCol] = null;
 
-    // castling simulation
     if (selectedPiece.type === "king" && Math.abs(col - oldCol) === 2 && row === oldRow) {
       const rookCol = col > oldCol ? 7 : 0;
       const newRookCol = col > oldCol ? col - 1 : col + 1;
@@ -78,7 +92,7 @@ const App = () => {
 
   return (
     <>
-      <Board matrix={board} handleMove={handleMove} />
+      <Board matrix={board} handleMove={handleMove} selectedPiece={selectedPiece} selectedPieceLocation={selectedPieceLocation} />
     </>
   )
 }

@@ -7,3 +7,9 @@ export interface PieceLocation {
     oldRow: number,
     oldCol: number,
 }
+
+export interface PromotionInfo {
+  row: number;
+  col: number;
+  color: Piece["color"];
+}

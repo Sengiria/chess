@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import Board from './components/Board'
-import type { Piece, PieceLocation } from './interface'
+import type { Piece, PieceLocation, PromotionInfo } from './interface'
 import { checkIfAllowedMovement, checkIfHasAnyMoves } from './utils/checkIfAllowedMovement'
 import { isKingInCheck } from './utils/isKingInCheck'
 
@@ -23,6 +23,7 @@ const App = () => {
   const [currentPlayer, setCurrentPlayer] = useState("white");
   const [isInCheck, setIsInCheck] = useState<boolean>(false);
   const [isInCheckMate, setIsInCheckMate] = useState<boolean>(false);
+  const [pendingPromotion, setPendingPromotion] = useState<PromotionInfo | null>(null);
 
   useEffect(() => {
     const inCheck = isKingInCheck(board, currentPlayer);
@@ -84,15 +85,45 @@ const App = () => {
       return;
     }
 
+    if (
+      selectedPiece.type === 'pawn' &&
+      ((selectedPiece.color === 'white' && row === 0) ||
+        (selectedPiece.color === 'black' && row === 7))
+    ) {
+      setPendingPromotion({ row, col, color: selectedPiece.color });
+      newBoard[oldRow][oldCol] = null;
+      setBoard(newBoard);
+      setSelectedPiece(null);
+      setSelectedPieceLocation(null);
+      return;
+    }
+
     setBoard(newBoard);
     setSelectedPiece(null);
     setSelectedPieceLocation(null);
     setCurrentPlayer(prev => (prev === "white" ? "black" : "white"));
+
   }
+
+  const handlePromotion = (pieceType: Piece["type"]) => {
+    if (!pendingPromotion) return;
+
+    const { row, col, color } = pendingPromotion;
+    const newBoard = board.map((r) => [...r]);
+    newBoard[row][col] = {
+      type: pieceType,
+      color,
+      hasMoved: true,
+    };
+
+    setBoard(newBoard);
+    setPendingPromotion(null);
+    setCurrentPlayer((prev) => (prev === "white" ? "black" : "white"));
+  };
 
   return (
     <>
-      <Board matrix={board} handleMove={handleMove} selectedPiece={selectedPiece} selectedPieceLocation={selectedPieceLocation} />
+      <Board matrix={board} handleMove={handleMove} selectedPieceLocation={selectedPieceLocation} pendingPromotion={pendingPromotion} handlePromotion={handlePromotion} />
     </>
   )
 }

@@ -92,15 +92,15 @@ describe('checkIfAllowedMovement', () => {
     });
 
     it('prevents moving a piece if king remains in check after move', () => {
-  const board = createEmptyBoard();
-  board[0][4] = { type: 'king', color: 'white', hasMoved: false };
-  board[1][4] = { type: 'pawn', color: 'white' };
-  board[7][4] = { type: 'rook', color: 'black' };
-  const pieceLocation: PieceLocation = { oldRow: 1, oldCol: 4 };
+        const board = createEmptyBoard();
+        board[0][4] = { type: 'king', color: 'white', hasMoved: false };
+        board[1][4] = { type: 'pawn', color: 'white' };
+        board[7][4] = { type: 'rook', color: 'black' };
+        const pieceLocation: PieceLocation = { oldRow: 1, oldCol: 4 };
 
-  const isAllowed = checkIfAllowedMovement(board[1][4]!, pieceLocation, 2, 4, board, true);
-  expect(isAllowed).toBe(false);
-});
+        const isAllowed = checkIfAllowedMovement(board[1][4]!, pieceLocation, 2, 4, board, true);
+        expect(isAllowed).toBe(false);
+    });
 
     it('allows queen to move diagonally or straight when path is clear', () => {
         const board = createEmptyBoard();

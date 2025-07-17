@@ -4,7 +4,7 @@ import Board from './components/Board'
 import type { Piece, PieceLocation, PromotionInfo } from './interface'
 import { checkIfAllowedMovement, checkIfHasAnyMoves } from './utils/checkIfAllowedMovement'
 import { isKingInCheck } from './utils/isKingInCheck'
-import { COLOUR_BLACK, COLOUR_WHITE, INITIAL_BOARD, PIECE_KING, PIECE_PAWN, } from './constants'
+import { COLOUR_BLACK, GAME_STATE_TIE, COLOUR_WHITE, INITIAL_BOARD, PIECE_KING, PIECE_PAWN, } from './constants'
 
 const App = () => {
   const [board, setBoard] = useState(INITIAL_BOARD);
@@ -12,20 +12,23 @@ const App = () => {
   const [selectedPieceLocation, setSelectedPieceLocation] = useState<PieceLocation | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState(COLOUR_WHITE);
   const [isInCheck, setIsInCheck] = useState<boolean>(false);
-  const [isInCheckMate, setIsInCheckMate] = useState<boolean>(false);
   const [pendingPromotion, setPendingPromotion] = useState<PromotionInfo | null>(null);
+  const [gameOver, setGameOver] = useState<null | { winner: typeof COLOUR_WHITE | typeof COLOUR_BLACK | typeof GAME_STATE_TIE }>(null);
 
   useEffect(() => {
     const inCheck = isKingInCheck(board, currentPlayer);
     const hasAnyMoves = checkIfHasAnyMoves(currentPlayer, board);
     setIsInCheck(inCheck)
-    setIsInCheckMate(inCheck && !hasAnyMoves)
-    if (inCheck) console.log("You are in Check!")
-    if (inCheck && !hasAnyMoves) console.log("You are in Check Mate!")
+
+    if (inCheck && !hasAnyMoves) {
+      setGameOver({ winner: currentPlayer === COLOUR_WHITE ? COLOUR_BLACK : COLOUR_WHITE });
+    } else if (!inCheck && !hasAnyMoves) {
+      setGameOver({ winner: GAME_STATE_TIE });
+    }
   }, [board, currentPlayer]);
 
   const handleMove = (row: number, col: number, piece?: Piece) => {
-    if (isInCheckMate) return;
+    if (gameOver) return;
     if (piece?.color !== currentPlayer && !selectedPiece) return;
 
     if (!selectedPiece && piece?.color === currentPlayer) {
@@ -113,7 +116,7 @@ const App = () => {
 
   return (
     <>
-      <Board matrix={board} handleMove={handleMove} selectedPieceLocation={selectedPieceLocation} pendingPromotion={pendingPromotion} handlePromotion={handlePromotion} />
+      <Board matrix={board} handleMove={handleMove} selectedPieceLocation={selectedPieceLocation} pendingPromotion={pendingPromotion} handlePromotion={handlePromotion} gameOver={gameOver} />
     </>
   )
 }

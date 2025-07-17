@@ -1,7 +1,7 @@
 import type React from "react";
 import { getPieceIcon } from "../utils/getPieceIcon";
 import type { Piece, PieceLocation, PromotionInfo } from "../interface";
-import { FILES, RANKS } from "../constants";
+import { COLOUR_BLACK, COLOUR_WHITE, FILES, GAME_STATE_TIE, RANKS } from "../constants";
 
 interface BoardProps {
     matrix: (Piece | null)[][];
@@ -9,14 +9,15 @@ interface BoardProps {
     selectedPieceLocation: PieceLocation | null;
     pendingPromotion: PromotionInfo | null
     handlePromotion: (pieceType: Piece["type"]) => void;
+    gameOver: null | { winner: typeof COLOUR_WHITE | typeof COLOUR_BLACK | typeof GAME_STATE_TIE };
 }
 
-const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation, pendingPromotion, handlePromotion }) => {
+const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation, pendingPromotion, handlePromotion, gameOver }) => {
     return (
         <div className="w-full h-full flex items-center justify-center p-8">
             <div className="relative bg-[#996140] shadow-lg p-4">
                 {pendingPromotion && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded shadow-lg z-50 p-4 text-center">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded shadow-lg z-20 p-4 text-center">
                         <p className="mb-2 font-bold text-black">Choose a piece to promote to:</p>
                         <div className="flex justify-center gap-4">
                             {["queen", "rook", "bishop", "knight"].map((type) => (
@@ -100,6 +101,25 @@ const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation
                         </span>
                     ))}
                 </div>
+
+                {gameOver && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="bg-[#e7d5c0] border-4 border-[#ae8167] p-6 rounded shadow-xl text-center z-40 pointer-events-auto">
+
+                            <h2 className="text-2xl font-bold mb-2">
+                                {gameOver.winner === "tie"
+                                    ? "Stalemate!"
+                                    : `${gameOver.winner.toUpperCase()} wins!`}
+                            </h2>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="mt-4 px-4 py-2 bg-[#996140] text-white rounded hover:bg-[#7e4f2f] hover:cursor-pointer"
+                            >
+                                Play Again
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

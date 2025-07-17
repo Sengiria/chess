@@ -2,6 +2,9 @@ import type { Piece, PieceLocation } from "../interface";
 import { isKingInCheck } from "./isKingInCheck";
 
 export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][], isInCheck?: boolean): boolean => {
+    // Prevent out-of-bounds moves
+    if (newRow < 0 || newRow > 7 || newCol < 0 || newCol > 7) return false;
+    
     let isAllowed = false;
     switch (selectedPiece.type) {
         case "pawn": {
@@ -124,6 +127,7 @@ const checkIfBishopMovementIsAllowed = (color: string, selectedPieceLocation: Pi
     let r = oldRow + verticalStep
 
     while (c !== newCol && r !== newRow) {
+        if (r < 0 || r > 7 || c < 0 || c > 7) return false;
         if (board[r][c]) {
             return false;
         }
@@ -158,6 +162,27 @@ const checkIfKingMovementIsAllowed = (selectedPiece: Piece, selectedPieceLocatio
             if (board[oldRow][c]) return false;
         }
         return true;
+    }
+
+    return false;
+}
+
+export const checkIfHasAnyMoves = (color: string, board: (Piece | null)[][]): boolean => {
+    for (let r = 0; r < board.length; r++) {
+        for (let c = 0; c < board[r].length; c++) {
+            const piece = board[r][c];
+            if (piece?.color === color) {
+                const pieceLocation = { oldRow: r, oldCol: c };
+                for (let targetR = 0; targetR < board.length; targetR++) {
+                    for (let targetC = 0; targetC < board[targetR].length; targetC++) {
+                        const isValid = checkIfAllowedMovement(piece, pieceLocation, targetR, targetC, board, true)
+                        if(isValid) return true;
+                    }
+
+                }
+            }
+        }
+
     }
 
     return false;

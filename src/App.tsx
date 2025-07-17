@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import Board from './components/Board'
 import type { Piece, PieceLocation } from './interface'
-import { checkIfAllowedMovement } from './utils/checkIfAllowedMovement'
+import { checkIfAllowedMovement, checkIfHasAnyMoves } from './utils/checkIfAllowedMovement'
 import { isKingInCheck } from './utils/isKingInCheck'
 
 const initialBoard = [
@@ -20,24 +20,26 @@ const App = () => {
   const [board, setBoard] = useState(initialBoard);
   const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null);
   const [selectedPieceLocation, setSelectedPieceLocation] = useState<PieceLocation | null>(null);
-  const [currentPlayer, setCurrentPlayer] = useState("white")
-  const [isInCheck, setIsInCheck] = useState<boolean>(false)
+  const [currentPlayer, setCurrentPlayer] = useState("white");
+  const [isInCheck, setIsInCheck] = useState<boolean>(false);
+  const [isInCheckMate, setIsInCheckMate] = useState<boolean>(false);
 
   useEffect(() => {
-  const enemyColor = currentPlayer === "white" ? "black" : "white";
-  const inCheck = isKingInCheck(board, enemyColor);
-  setIsInCheck(inCheck)
-
-}, [board, currentPlayer]);
+    const inCheck = isKingInCheck(board, currentPlayer);
+    const hasAnyMoves = checkIfHasAnyMoves(currentPlayer, board);
+    setIsInCheck(inCheck)
+    setIsInCheckMate(inCheck && !hasAnyMoves)
+    if (inCheck) console.log("You are in Check!")
+    if (inCheck && !hasAnyMoves) console.log("You are in Check Mate!")
+  }, [board, currentPlayer]);
 
   const handleMove = (row: number, col: number, piece?: Piece) => {
-    if (piece?.color !== currentPlayer && !selectedPiece) {
-      return;
-    }
+    if (isInCheckMate) return;
+    if (piece?.color !== currentPlayer && !selectedPiece) return;
 
     if (!selectedPiece && piece?.color === currentPlayer) {
       setSelectedPiece(piece);
-      setSelectedPieceLocation({ oldRow: row, oldCol: col })
+      setSelectedPieceLocation({ oldRow: row, oldCol: col });
       return;
     }
 
@@ -47,28 +49,31 @@ const App = () => {
       return;
     }
 
-    let newBoard = board.map(row => [...row]);
+    // 🔥 simulate the move first
     const { oldRow, oldCol } = selectedPieceLocation;
-    const isAllowedMovement = checkIfAllowedMovement(selectedPiece, selectedPieceLocation, row, col, board, isInCheck)
+    const newBoard = board.map(row => [...row]);
+    newBoard[row][col] = { ...selectedPiece, hasMoved: true };
+    newBoard[oldRow][oldCol] = null;
 
-    if (!isAllowedMovement) {
+    // castling simulation
+    if (selectedPiece.type === "king" && Math.abs(col - oldCol) === 2 && row === oldRow) {
+      const rookCol = col > oldCol ? 7 : 0;
+      const newRookCol = col > oldCol ? col - 1 : col + 1;
+      newBoard[row][newRookCol] = { ...board[row][rookCol], hasMoved: true };
+      newBoard[row][rookCol] = null;
+    }
+
+    const wouldBeInCheck = isKingInCheck(newBoard, currentPlayer);
+    if (wouldBeInCheck) {
       setSelectedPiece(null);
       setSelectedPieceLocation(null);
       return;
     }
 
-    newBoard[row][col] = { ...selectedPiece, hasMoved: true };
-    newBoard[oldRow][oldCol] = null;
-    // Special case: Castling
-    if (selectedPiece.type === "king" && Math.abs(col - oldCol) === 2 && row === oldRow) {
-      const rookCol = col > selectedPieceLocation.oldCol ? 7 : 0;
-      const newRookCol = col > selectedPieceLocation.oldCol ? col -1 : col + 1;
-      newBoard[row][newRookCol] = {...board[row][rookCol], hasMoved: true}
-      newBoard[row][rookCol] = null;
-    }
-    setBoard(newBoard)
-    setSelectedPiece(null)
-    setCurrentPlayer(prev => prev === 'white' ? 'black' : 'white');
+    setBoard(newBoard);
+    setSelectedPiece(null);
+    setSelectedPieceLocation(null);
+    setCurrentPlayer(prev => (prev === "white" ? "black" : "white"));
   }
 
   return (

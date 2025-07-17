@@ -1,4 +1,5 @@
 
+import { PIECE_KING } from "../constants";
 import type { Piece, PieceLocation } from "../interface";
 import { checkIfAllowedMovement } from "./checkIfAllowedMovement";
 
@@ -9,7 +10,7 @@ export const isKingInCheck = ( board: (Piece | null)[][], color: string): boolea
     for (let row = 0; row < board.length; row++) {
         for (let col = 0; col < board[row].length; col++) {
             const piece = board[row][col];
-            if (piece?.type === "king" && piece.color === color) {
+            if (piece?.type === PIECE_KING && piece.color === color) {
                 kingPosition = { oldRow: row, oldCol: col };
                 break;
             }

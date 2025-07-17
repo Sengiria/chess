@@ -1,3 +1,4 @@
+import { COLOUR_BLACK, COLOUR_WHITE, PIECE_BISHOP, PIECE_KING, PIECE_KNIGHT, PIECE_PAWN, PIECE_QUEEN, PIECE_ROOK } from "../constants";
 import type { Piece, PieceLocation } from "../interface";
 import { isKingInCheck } from "./isKingInCheck";
 
@@ -10,27 +11,27 @@ export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocati
 
     let isAllowed = false;
     switch (selectedPiece.type) {
-        case "pawn": {
+        case PIECE_PAWN: {
             isAllowed = checkIfPawnMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
             break;
         }
-        case "knight": {
+        case PIECE_KNIGHT: {
             isAllowed = checkIfKnightMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
             break;
         }
-        case "rook": {
+        case PIECE_ROOK: {
             isAllowed = checkIfRookMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
             break;
         }
-        case "bishop": {
+        case PIECE_BISHOP: {
             isAllowed = checkIfBishopMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
             break;
         }
-        case "queen": {
+        case PIECE_QUEEN: {
             isAllowed = checkIfBishopMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board) || checkIfRookMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
             break;
         }
-        case "king": {
+        case PIECE_KING: {
             isAllowed = checkIfKingMovementIsAllowed(selectedPiece, selectedPieceLocation, newRow, newCol, board)
             break;
         }
@@ -54,10 +55,10 @@ export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocati
 
 const checkIfPawnMovementIsAllowed = (color: string, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
     const { oldRow, oldCol } = selectedPieceLocation;
-    const isWhite = color === "white";
+    const isWhite = color === COLOUR_WHITE;
     const direction = isWhite ? -1 : 1;
     const startRow = isWhite ? 6 : 1;
-    const enemyColor = isWhite ? "black" : "white";
+    const enemyColor = isWhite ? COLOUR_BLACK : COLOUR_WHITE;
 
     // Forward Move
     if (newRow === oldRow + direction && oldCol === newCol && !board[newRow][newCol]) {

@@ -1,6 +1,7 @@
 import type React from "react";
 import { getPieceIcon } from "../utils/getPieceIcon";
 import type { Piece, PieceLocation, PromotionInfo } from "../interface";
+import { FILES, RANKS } from "../constants";
 
 interface BoardProps {
     matrix: (Piece | null)[][];
@@ -11,9 +12,6 @@ interface BoardProps {
 }
 
 const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation, pendingPromotion, handlePromotion }) => {
-    const files = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
-
     return (
         <div className="w-full h-full flex items-center justify-center p-8">
             <div className="relative bg-[#996140] shadow-lg p-4">
@@ -34,7 +32,7 @@ const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation
                     </div>
                 )}
                 <div className="flex justify-between w-[400px] h-[20px] text-white font-bold text-sm mx-auto mb-1">
-                    {files.map((f) => (
+                    {FILES.map((f) => (
                         <span key={`top-${f}`} className="w-[50px] text-center">
                             {f}
                         </span>
@@ -43,7 +41,7 @@ const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation
 
                 <div className="flex">
                     <div className="flex flex-col justify-between mr-1 text-white font-bold text-sm h-[400px]">
-                        {ranks.map((r) => (
+                        {RANKS.map((r) => (
                             <span
                                 key={`left-${r}`}
                                 className="h-[50px] w-[20px] flex items-center justify-center"
@@ -85,7 +83,7 @@ const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation
                         )}
                     </div>
                     <div className="flex flex-col justify-between ml-1 text-white font-bold text-sm h-[400px]">
-                        {ranks.map((r) => (
+                        {RANKS.map((r) => (
                             <span
                                 key={`right-${r}`}
                                 className="h-[50px] w-[20px] flex items-center justify-center"
@@ -96,7 +94,7 @@ const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation
                     </div>
                 </div>
                 <div className="flex justify-between w-[400px] h-[20px] text-white font-bold text-sm mx-auto mt-1">
-                    {files.map((f) => (
+                    {FILES.map((f) => (
                         <span key={`bot-${f}`} className="w-[50px] text-center">
                             {f}
                         </span>

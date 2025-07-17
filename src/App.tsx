@@ -4,23 +4,13 @@ import Board from './components/Board'
 import type { Piece, PieceLocation, PromotionInfo } from './interface'
 import { checkIfAllowedMovement, checkIfHasAnyMoves } from './utils/checkIfAllowedMovement'
 import { isKingInCheck } from './utils/isKingInCheck'
-
-const initialBoard = [
-  [{ type: 'rook', color: 'black' }, { type: 'knight', color: 'black' }, { type: 'bishop', color: 'black' }, { type: 'queen', color: 'black' }, { type: 'king', color: 'black' }, { type: 'bishop', color: 'black' }, { type: 'knight', color: 'black' }, { type: 'rook', color: 'black' }],
-  Array(8).fill(null).map(() => ({ type: 'pawn', color: 'black' })),
-  Array(8).fill(null),
-  Array(8).fill(null),
-  Array(8).fill(null),
-  Array(8).fill(null),
-  Array(8).fill(null).map(() => ({ type: 'pawn', color: 'white' })),
-  [{ type: 'rook', color: 'white' }, { type: 'knight', color: 'white' }, { type: 'bishop', color: 'white' }, { type: 'queen', color: 'white' }, { type: 'king', color: 'white' }, { type: 'bishop', color: 'white' }, { type: 'knight', color: 'white' }, { type: 'rook', color: 'white' }],
-]
+import { COLOUR_BLACK, COLOUR_WHITE, INITIAL_BOARD, PIECE_KING, PIECE_PAWN, } from './constants'
 
 const App = () => {
-  const [board, setBoard] = useState(initialBoard);
+  const [board, setBoard] = useState(INITIAL_BOARD);
   const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null);
   const [selectedPieceLocation, setSelectedPieceLocation] = useState<PieceLocation | null>(null);
-  const [currentPlayer, setCurrentPlayer] = useState("white");
+  const [currentPlayer, setCurrentPlayer] = useState(COLOUR_WHITE);
   const [isInCheck, setIsInCheck] = useState<boolean>(false);
   const [isInCheckMate, setIsInCheckMate] = useState<boolean>(false);
   const [pendingPromotion, setPendingPromotion] = useState<PromotionInfo | null>(null);
@@ -71,7 +61,7 @@ const App = () => {
     newBoard[row][col] = { ...selectedPiece, hasMoved: true };
     newBoard[oldRow][oldCol] = null;
 
-    if (selectedPiece.type === "king" && Math.abs(col - oldCol) === 2 && row === oldRow) {
+    if (selectedPiece.type === PIECE_KING && Math.abs(col - oldCol) === 2 && row === oldRow) {
       const rookCol = col > oldCol ? 7 : 0;
       const newRookCol = col > oldCol ? col - 1 : col + 1;
       newBoard[row][newRookCol] = { ...board[row][rookCol], hasMoved: true };
@@ -86,9 +76,9 @@ const App = () => {
     }
 
     if (
-      selectedPiece.type === 'pawn' &&
-      ((selectedPiece.color === 'white' && row === 0) ||
-        (selectedPiece.color === 'black' && row === 7))
+      selectedPiece.type === PIECE_PAWN &&
+      ((selectedPiece.color === COLOUR_WHITE && row === 0) ||
+        (selectedPiece.color === COLOUR_BLACK && row === 7))
     ) {
       setPendingPromotion({ row, col, color: selectedPiece.color });
       newBoard[oldRow][oldCol] = null;
@@ -101,7 +91,7 @@ const App = () => {
     setBoard(newBoard);
     setSelectedPiece(null);
     setSelectedPieceLocation(null);
-    setCurrentPlayer(prev => (prev === "white" ? "black" : "white"));
+    setCurrentPlayer(prev => (prev === COLOUR_WHITE ? COLOUR_BLACK : COLOUR_WHITE));
 
   }
 
@@ -118,7 +108,7 @@ const App = () => {
 
     setBoard(newBoard);
     setPendingPromotion(null);
-    setCurrentPlayer((prev) => (prev === "white" ? "black" : "white"));
+    setCurrentPlayer((prev) => (prev === COLOUR_WHITE ? COLOUR_BLACK : COLOUR_WHITE));
   };
 
   return (

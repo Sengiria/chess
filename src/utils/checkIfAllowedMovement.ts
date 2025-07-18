@@ -2,7 +2,7 @@ import { COLOUR_BLACK, COLOUR_WHITE, PIECE_BISHOP, PIECE_KING, PIECE_KNIGHT, PIE
 import type { Piece, PieceLocation } from "../interface";
 import { isKingInCheck } from "./isKingInCheck";
 
-export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][], isInCheck?: boolean): boolean => {
+export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][], isInCheck?: boolean, enPassantTarget?: PieceLocation | null): boolean => {
     // Prevent out-of-bounds moves
     if (newRow < 0 || newRow > 7 || newCol < 0 || newCol > 7) return false;
     if (newRow === selectedPieceLocation.oldRow && newCol === selectedPieceLocation.oldCol) {
@@ -12,7 +12,7 @@ export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocati
     let isAllowed = false;
     switch (selectedPiece.type) {
         case PIECE_PAWN: {
-            isAllowed = checkIfPawnMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
+            isAllowed = checkIfPawnMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board, enPassantTarget)
             break;
         }
         case PIECE_KNIGHT: {
@@ -53,7 +53,7 @@ export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocati
     return isAllowed;
 }
 
-const checkIfPawnMovementIsAllowed = (color: string, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
+const checkIfPawnMovementIsAllowed = (color: string, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][], enPassantTarget?: PieceLocation | null): boolean => {
     const { oldRow, oldCol } = selectedPieceLocation;
     const isWhite = color === COLOUR_WHITE;
     const direction = isWhite ? -1 : 1;
@@ -70,6 +70,19 @@ const checkIfPawnMovementIsAllowed = (color: string, selectedPieceLocation: Piec
     }
     // Diagonal Attack
     if (newRow === oldRow + direction && Math.abs(newCol - oldCol) === 1 && board[newRow][newCol]?.color === enemyColor) {
+        return true;
+    }
+    // En Passant Capture
+    if (
+        enPassantTarget &&
+        newRow === enPassantTarget.oldRow &&
+        newCol === enPassantTarget.oldCol &&
+        board[oldRow][newCol]?.type === PIECE_PAWN &&
+        board[oldRow][newCol]?.color === enemyColor &&
+        board[newRow][newCol] === null &&
+        Math.abs(newCol - oldCol) === 1 &&
+        newRow === oldRow + direction
+    ) {
         return true;
     }
 

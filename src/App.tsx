@@ -14,11 +14,19 @@ const App = () => {
   const [isInCheck, setIsInCheck] = useState<boolean>(false);
   const [pendingPromotion, setPendingPromotion] = useState<PromotionInfo | null>(null);
   const [gameOver, setGameOver] = useState<null | { winner: typeof COLOUR_WHITE | typeof COLOUR_BLACK | typeof GAME_STATE_TIE }>(null);
+  const [checkMessageVisible, setCheckMessageVisible] = useState(false);
+  const [enPassantTarget, setEnPassantTarget] = useState<null | PieceLocation>(null);
 
   useEffect(() => {
     const inCheck = isKingInCheck(board, currentPlayer);
     const hasAnyMoves = checkIfHasAnyMoves(currentPlayer, board);
     setIsInCheck(inCheck)
+    console.log(enPassantTarget)
+
+    if (inCheck) {
+      setCheckMessageVisible(true);
+      setTimeout(() => setCheckMessageVisible(false), 2000);
+    }
 
     if (inCheck && !hasAnyMoves) {
       setGameOver({ winner: currentPlayer === COLOUR_WHITE ? COLOUR_BLACK : COLOUR_WHITE });
@@ -51,7 +59,8 @@ const App = () => {
       row,
       col,
       board,
-      isInCheck
+      isInCheck,
+      enPassantTarget
     );
 
     if (!isAllowed) {
@@ -71,6 +80,15 @@ const App = () => {
       newBoard[row][rookCol] = null;
     }
 
+    if (selectedPiece.type === PIECE_PAWN && Math.abs(row - oldRow) === 2) {
+      setEnPassantTarget({
+        oldRow: (row + oldRow) / 2,
+        oldCol,
+      });
+    } else {
+      setEnPassantTarget(null);
+    }
+
     const wouldBeInCheck = isKingInCheck(newBoard, currentPlayer);
     if (wouldBeInCheck) {
       setSelectedPiece(null);
@@ -78,11 +96,7 @@ const App = () => {
       return;
     }
 
-    if (
-      selectedPiece.type === PIECE_PAWN &&
-      ((selectedPiece.color === COLOUR_WHITE && row === 0) ||
-        (selectedPiece.color === COLOUR_BLACK && row === 7))
-    ) {
+    if (selectedPiece.type === PIECE_PAWN && ((selectedPiece.color === COLOUR_WHITE && row === 0) || (selectedPiece.color === COLOUR_BLACK && row === 7))) {
       setPendingPromotion({ row, col, color: selectedPiece.color });
       newBoard[oldRow][oldCol] = null;
       setBoard(newBoard);
@@ -91,16 +105,20 @@ const App = () => {
       return;
     }
 
+    // En Passant: Remove captured pawn
+    if (selectedPiece.type === PIECE_PAWN && enPassantTarget && row === enPassantTarget.oldRow && col === enPassantTarget.oldCol && board[selectedPieceLocation.oldRow][col]?.type === PIECE_PAWN) {
+      newBoard[selectedPieceLocation.oldRow][col] = null;
+      setEnPassantTarget(null);
+    }
+
     setBoard(newBoard);
     setSelectedPiece(null);
     setSelectedPieceLocation(null);
     setCurrentPlayer(prev => (prev === COLOUR_WHITE ? COLOUR_BLACK : COLOUR_WHITE));
-
   }
 
   const handlePromotion = (pieceType: Piece["type"]) => {
     if (!pendingPromotion) return;
-
     const { row, col, color } = pendingPromotion;
     const newBoard = board.map((r) => [...r]);
     newBoard[row][col] = {
@@ -115,9 +133,14 @@ const App = () => {
   };
 
   return (
-    <>
+    <div className="flex sm:justify-center sm:items-center sm:min-h-screen">
+      {checkMessageVisible && (
+        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-4 py-2 rounded shadow-md text-base sm:text-lg font-bold z-50 animate-bounce">
+          {currentPlayer.toUpperCase()} is in Check!
+        </div>
+      )}
       <Board matrix={board} handleMove={handleMove} selectedPieceLocation={selectedPieceLocation} pendingPromotion={pendingPromotion} handlePromotion={handlePromotion} gameOver={gameOver} />
-    </>
+    </div>
   )
 }
 

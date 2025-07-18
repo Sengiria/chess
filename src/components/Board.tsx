@@ -1,18 +1,18 @@
 import type React from "react";
 import { getPieceIcon } from "../utils/getPieceIcon";
-import type { Piece, PieceLocation, PromotionInfo } from "../interface";
+import type { Piece, PromotionInfo } from "../interface";
 import { COLOUR_BLACK, COLOUR_WHITE, FILES, GAME_STATE_TIE, RANKS } from "../constants";
 
 interface BoardProps {
     matrix: (Piece | null)[][];
     handleMove: (row: number, col: number, piece?: Piece) => void;
-    selectedPieceLocation: PieceLocation | null;
+    selectedPiece: Piece | null;
     pendingPromotion: PromotionInfo | null
     handlePromotion: (pieceType: Piece["type"]) => void;
     gameOver: null | { winner: typeof COLOUR_WHITE | typeof COLOUR_BLACK | typeof GAME_STATE_TIE };
 }
 
-const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation, pendingPromotion, handlePromotion, gameOver }) => {
+const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPiece, pendingPromotion, handlePromotion, gameOver }) => {
     return (
         <div className="w-full max-w-[500px] aspect-square sm:aspect-auto bg-[#996140]">
             <div className="flex justify-between text-white font-bold text-xs mb-1 px-[28px]">
@@ -48,9 +48,9 @@ const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPieceLocation
                                 const squareColor = isLight ? "bg-[#e7d5c0]" : "bg-[#ae8167]";
                                 const icon = cell ? getPieceIcon(cell) : null;
                                 const isSelected =
-                                    selectedPieceLocation &&
-                                    selectedPieceLocation.oldRow === rowIndex &&
-                                    selectedPieceLocation.oldCol === colIndex;
+                                    selectedPiece?.location &&
+                                    selectedPiece.location.row === rowIndex &&
+                                    selectedPiece.location.col === colIndex;
 
                                 return (
                                     <button

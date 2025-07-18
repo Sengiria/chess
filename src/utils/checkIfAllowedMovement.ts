@@ -2,37 +2,40 @@ import { COLOUR_BLACK, COLOUR_WHITE, PIECE_BISHOP, PIECE_KING, PIECE_KNIGHT, PIE
 import type { Piece, PieceLocation } from "../interface";
 import { isKingInCheck } from "./isKingInCheck";
 
-export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][], isInCheck?: boolean, enPassantTarget?: PieceLocation | null): boolean => {
+export const checkIfAllowedMovement = (selectedPiece: Piece, newRow: number, newCol: number, board: (Piece | null)[][], isInCheck?: boolean, enPassantTarget?: PieceLocation | null): boolean => {
     // Prevent out-of-bounds moves
-    if (newRow < 0 || newRow > 7 || newCol < 0 || newCol > 7) return false;
-    if (newRow === selectedPieceLocation.oldRow && newCol === selectedPieceLocation.oldCol) {
+    if (newRow < 0 || newRow > 7 || newCol < 0 || newCol > 7 || !selectedPiece.location ) return false;
+
+    const { location: { row, col } } = selectedPiece;
+
+    if (newRow === row && newCol === col) {
         return false;
     }
 
     let isAllowed = false;
     switch (selectedPiece.type) {
         case PIECE_PAWN: {
-            isAllowed = checkIfPawnMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board, enPassantTarget)
+            isAllowed = checkIfPawnMovementIsAllowed(selectedPiece, newRow, newCol, board, enPassantTarget)
             break;
         }
         case PIECE_KNIGHT: {
-            isAllowed = checkIfKnightMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
+            isAllowed = checkIfKnightMovementIsAllowed(selectedPiece, newRow, newCol, board)
             break;
         }
         case PIECE_ROOK: {
-            isAllowed = checkIfRookMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
+            isAllowed = checkIfRookMovementIsAllowed(selectedPiece, newRow, newCol, board)
             break;
         }
         case PIECE_BISHOP: {
-            isAllowed = checkIfBishopMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
+            isAllowed = checkIfBishopMovementIsAllowed(selectedPiece, newRow, newCol, board)
             break;
         }
         case PIECE_QUEEN: {
-            isAllowed = checkIfBishopMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board) || checkIfRookMovementIsAllowed(selectedPiece.color, selectedPieceLocation, newRow, newCol, board)
+            isAllowed = checkIfBishopMovementIsAllowed(selectedPiece, newRow, newCol, board) || checkIfRookMovementIsAllowed(selectedPiece, newRow, newCol, board)
             break;
         }
         case PIECE_KING: {
-            isAllowed = checkIfKingMovementIsAllowed(selectedPiece, selectedPieceLocation, newRow, newCol, board)
+            isAllowed = checkIfKingMovementIsAllowed(selectedPiece, newRow, newCol, board)
             break;
         }
         default:
@@ -43,7 +46,7 @@ export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocati
         // Simulate the move
         const simulatedBoard = board.map(row => [...row]);
         simulatedBoard[newRow][newCol] = { ...selectedPiece, hasMoved: true };
-        simulatedBoard[selectedPieceLocation.oldRow][selectedPieceLocation.oldCol] = null;
+        simulatedBoard[row][col] = null;
 
         // Prevent the move if it doesn't remove the check
         const stillInCheck = isKingInCheck(simulatedBoard, selectedPiece.color);
@@ -53,35 +56,37 @@ export const checkIfAllowedMovement = (selectedPiece: Piece, selectedPieceLocati
     return isAllowed;
 }
 
-const checkIfPawnMovementIsAllowed = (color: string, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][], enPassantTarget?: PieceLocation | null): boolean => {
-    const { oldRow, oldCol } = selectedPieceLocation;
+const checkIfPawnMovementIsAllowed = (selectedPiece: Piece, newRow: number, newCol: number, board: (Piece | null)[][], enPassantTarget?: PieceLocation | null): boolean => {
+    if (!selectedPiece.location) return false;
+
+    const { location: { row, col }, color } = selectedPiece;
     const isWhite = color === COLOUR_WHITE;
     const direction = isWhite ? -1 : 1;
     const startRow = isWhite ? 6 : 1;
     const enemyColor = isWhite ? COLOUR_BLACK : COLOUR_WHITE;
 
     // Forward Move
-    if (newRow === oldRow + direction && oldCol === newCol && !board[newRow][newCol]) {
+    if (newRow === row + direction && col === newCol && !board[newRow][newCol]) {
         return true;
     }
     // Forward Move 2 steps
-    if (oldRow === startRow && newRow === oldRow + direction * 2 && oldCol === newCol && !board[newRow][newCol] && !board[oldRow + direction][newCol]) {
+    if (row === startRow && newRow === row + direction * 2 && col === newCol && !board[newRow][newCol] && !board[row + direction][newCol]) {
         return true;
     }
     // Diagonal Attack
-    if (newRow === oldRow + direction && Math.abs(newCol - oldCol) === 1 && board[newRow][newCol]?.color === enemyColor) {
+    if (newRow === row + direction && Math.abs(newCol - col) === 1 && board[newRow][newCol]?.color === enemyColor) {
         return true;
     }
     // En Passant Capture
     if (
         enPassantTarget &&
-        newRow === enPassantTarget.oldRow &&
-        newCol === enPassantTarget.oldCol &&
-        board[oldRow][newCol]?.type === PIECE_PAWN &&
-        board[oldRow][newCol]?.color === enemyColor &&
+        newRow === enPassantTarget.row &&
+        newCol === enPassantTarget.col &&
+        board[row][newCol]?.type === PIECE_PAWN &&
+        board[row][newCol]?.color === enemyColor &&
         board[newRow][newCol] === null &&
-        Math.abs(newCol - oldCol) === 1 &&
-        newRow === oldRow + direction
+        Math.abs(newCol - col) === 1 &&
+        newRow === row + direction
     ) {
         return true;
     }
@@ -89,11 +94,13 @@ const checkIfPawnMovementIsAllowed = (color: string, selectedPieceLocation: Piec
     return false;
 }
 
-const checkIfKnightMovementIsAllowed = (color: string, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
-    const { oldRow, oldCol } = selectedPieceLocation;
+const checkIfKnightMovementIsAllowed = (selectedPiece: Piece, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
+    if (!selectedPiece.location) return false;
+
+    const { location: { row, col }, color } = selectedPiece;
     const existingAllyUnitOnField = board[newRow][newCol]?.color === color;
-    const rowDiff = Math.abs(newRow - oldRow);
-    const colDiff = Math.abs(newCol - oldCol);
+    const rowDiff = Math.abs(newRow - row);
+    const colDiff = Math.abs(newCol - col);
 
     if (((rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2)) && !existingAllyUnitOnField) {
         return true;
@@ -102,22 +109,24 @@ const checkIfKnightMovementIsAllowed = (color: string, selectedPieceLocation: Pi
     return false;
 }
 
-const checkIfRookMovementIsAllowed = (color: string, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
-    const { oldRow, oldCol } = selectedPieceLocation;
+const checkIfRookMovementIsAllowed = (selectedPiece: Piece, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
+    if (!selectedPiece.location) return false;
+
+    const { location: { row, col }, color } = selectedPiece;
 
     // Vertical Movement
-    if (oldCol === newCol && oldRow !== newRow) {
-        const step = newRow > oldRow ? 1 : -1;
-        for (let r = oldRow + step; r !== newRow; r += step) {
-            if (board[r][oldCol]) return false;
+    if (col === newCol && row !== newRow) {
+        const step = newRow > row ? 1 : -1;
+        for (let r = row + step; r !== newRow; r += step) {
+            if (board[r][col]) return false;
         }
 
     }
     // Horizontal Movement
-    else if (oldRow === newRow && oldCol !== newCol) {
-        const step = newCol > oldCol ? 1 : -1;
-        for (let c = oldCol + step; c !== newCol; c += step) {
-            if (board[oldRow][c]) return false;
+    else if (row === newRow && col !== newCol) {
+        const step = newCol > col ? 1 : -1;
+        for (let c = col + step; c !== newCol; c += step) {
+            if (board[row][c]) return false;
         }
     }
 
@@ -129,27 +138,26 @@ const checkIfRookMovementIsAllowed = (color: string, selectedPieceLocation: Piec
     return !existingAllyUnitOnField;
 }
 
-const checkIfBishopMovementIsAllowed = (color: string, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
-    const { oldCol, oldRow } = selectedPieceLocation;
-    const rowDiff = Math.abs(newRow - oldRow);
-    const colDiff = Math.abs(newCol - oldCol);
-    const horizontalStep = newCol > oldCol ? 1 : -1;
-    const verticalStep = newRow > oldRow ? 1 : -1;
+const checkIfBishopMovementIsAllowed = (selectedPiece: Piece, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
+    if (!selectedPiece.location) return false;
+
+    const { location: { row, col }, color } = selectedPiece;
+    const rowDiff = Math.abs(newRow - row);
+    const colDiff = Math.abs(newCol - col);
+    const horizontalStep = newCol > col ? 1 : -1;
+    const verticalStep = newRow > row ? 1 : -1;
 
     if (rowDiff !== colDiff) {
         return false;
     }
 
-    let c = oldCol + horizontalStep;
-    let r = oldRow + verticalStep
+    let r = row + verticalStep;
+    let c = col + horizontalStep;
 
-    while (c !== newCol && r !== newRow) {
-        if (r < 0 || r > 7 || c < 0 || c > 7) return false;
-        if (board[r][c]) {
-            return false;
-        }
-        c += horizontalStep;
+    while (r !== newRow && c !== newCol) {
+        if (r < 0 || r > 7 || c < 0 || c > 7 || board[r][c]) return false;
         r += verticalStep;
+        c += horizontalStep;
     }
 
     // check destination
@@ -158,14 +166,15 @@ const checkIfBishopMovementIsAllowed = (color: string, selectedPieceLocation: Pi
     return !target || target.color !== color;
 }
 
-const checkIfKingMovementIsAllowed = (selectedPiece: Piece, selectedPieceLocation: PieceLocation, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
-    const { oldRow, oldCol } = selectedPieceLocation;
-    const { color, hasMoved } = selectedPiece;
-    const rowDiff = Math.abs(newRow - oldRow);
-    const colDiff = Math.abs(newCol - oldCol);
-    const rookCol = newCol > oldCol ? 7 : 0;
-    const rook = board[oldRow][rookCol];
-    const isValidRook = rook?.type === "rook" && !rook?.hasMoved;
+const checkIfKingMovementIsAllowed = (selectedPiece: Piece, newRow: number, newCol: number, board: (Piece | null)[][]): boolean => {
+    if (!selectedPiece.location) return false;
+
+    const { location: { row, col }, color, hasMoved } = selectedPiece;
+    const rowDiff = Math.abs(newRow - row);
+    const colDiff = Math.abs(newCol - col);
+    const rookCol = newCol > col ? 7 : 0;
+    const rook = board[row][rookCol];
+    const isValidRook = rook?.type === PIECE_ROOK && !rook?.hasMoved;
 
     // 1 move in any direction
     if (rowDiff <= 1 && colDiff <= 1 && (rowDiff !== 0 || colDiff !== 0)) {
@@ -173,10 +182,10 @@ const checkIfKingMovementIsAllowed = (selectedPiece: Piece, selectedPieceLocatio
         return !target || target.color !== color;
     }
     // castling
-    if (!hasMoved && isValidRook && colDiff === 2 && newRow === oldRow) {
-        const step = newCol > oldCol ? 1 : -1;
-        for (let c = oldCol + step; c !== rookCol; c += step) {
-            if (board[oldRow][c]) return false;
+    if (!hasMoved && isValidRook && colDiff === 2 && newRow === row) {
+        const step = newCol > col ? 1 : -1;
+        for (let c = col + step; c !== rookCol; c += step) {
+            if (board[row][c]) return false;
         }
         return true;
     }
@@ -189,10 +198,10 @@ export const checkIfHasAnyMoves = (color: string, board: (Piece | null)[][]): bo
         for (let c = 0; c < board[r].length; c++) {
             const piece = board[r][c];
             if (piece?.color === color) {
-                const pieceLocation = { oldRow: r, oldCol: c };
+                const selectedPiece = { ...piece, location: { row: r, col: c } };
                 for (let targetR = 0; targetR < board.length; targetR++) {
                     for (let targetC = 0; targetC < board[targetR].length; targetC++) {
-                        const isValid = checkIfAllowedMovement(piece, pieceLocation, targetR, targetC, board, true)
+                        const isValid = checkIfAllowedMovement(selectedPiece, targetR, targetC, board, true)
                         if (isValid) return true;
                     }
 

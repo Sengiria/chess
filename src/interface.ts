@@ -1,11 +1,14 @@
+import { COLOUR_WHITE, GAME_STATE_TIE, type COLOUR_BLACK } from "./constants";
+
+export interface PieceLocation {
+    row: number,
+    col: number,
+}
 export interface Piece {
     type: string,
     color: string,
     hasMoved?: boolean,
-}
-export interface PieceLocation {
-    oldRow: number,
-    oldCol: number,
+    location?: PieceLocation
 }
 
 export interface PromotionInfo {
@@ -13,3 +16,7 @@ export interface PromotionInfo {
   col: number;
   color: Piece["color"];
 }
+
+export type CurrentPlayer = typeof COLOUR_BLACK | typeof COLOUR_WHITE;
+
+export type GameOverState = { winner: CurrentPlayer | typeof GAME_STATE_TIE };

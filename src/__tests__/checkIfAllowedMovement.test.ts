@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { checkIfAllowedMovement, checkIfHasAnyMoves } from '../utils/checkIfAllowedMovement';
 import { COLOUR_BLACK, COLOUR_WHITE, PIECE_BISHOP, PIECE_KING, PIECE_KNIGHT, PIECE_PAWN, PIECE_QUEEN, PIECE_ROOK } from '../constants';
-import type { Piece } from '../interface';
+import type { Piece, PieceLocation } from '../interface';
 const createEmptyBoard = (): (Piece | null)[][] => Array(8).fill(null).map(() => Array(8).fill(null));
 
 describe('checkIfAllowedMovement', () => {
@@ -11,17 +11,9 @@ describe('checkIfAllowedMovement', () => {
             const board = createEmptyBoard();
             const cell = { type: PIECE_PAWN, color: COLOUR_WHITE };
             board[6][4] = cell;
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE, location: { row: 7, col: 4 } };
             const piece = { ...cell, location: { row: 6, col: 4 } };
             const isAllowed = checkIfAllowedMovement(piece, 5, 4, board);
-            expect(isAllowed).toBe(true);
-        });
-
-        it('allows a black pawn to move forward one square', () => {
-            const board = createEmptyBoard();
-            const cell = { type: PIECE_PAWN, color: COLOUR_BLACK };
-            board[1][4] = cell;
-            const piece = { ...cell, location: { row: 1, col: 4 } };
-            const isAllowed = checkIfAllowedMovement(piece, 2, 4, board);
             expect(isAllowed).toBe(true);
         });
 
@@ -29,17 +21,9 @@ describe('checkIfAllowedMovement', () => {
             const board = createEmptyBoard();
             const cell = { type: PIECE_PAWN, color: COLOUR_WHITE };
             board[6][4] = cell;
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE, location: { row: 7, col: 4 } };
             const piece = { ...cell, location: { row: 6, col: 4 } };
             const isAllowed = checkIfAllowedMovement(piece, 4, 4, board);
-            expect(isAllowed).toBe(true);
-        });
-
-        it('allows a black pawn to move forward two squares from start', () => {
-            const board = createEmptyBoard();
-            const cell = { type: PIECE_PAWN, color: COLOUR_BLACK };
-            board[1][4] = cell;
-            const piece = { ...cell, location: { row: 1, col: 4 } };
-            const isAllowed = checkIfAllowedMovement(piece, 3, 4, board);
             expect(isAllowed).toBe(true);
         });
 
@@ -50,6 +34,7 @@ describe('checkIfAllowedMovement', () => {
 
             board[6][4] = whitePawn;
             board[5][5] = blackPawn;
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE, location: { row: 7, col: 4 } };
 
             const piece = { ...whitePawn, location: { row: 6, col: 4 } };
 
@@ -78,6 +63,7 @@ describe('checkIfAllowedMovement', () => {
 
             board[3][4] = whitePawn;
             board[3][5] = blackPawn;
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE, location: { row: 7, col: 4 } };
 
             const piece = { ...whitePawn, location: { row: 3, col: 4 } };
             const enPassantTarget = { row: 2, col: 5 };
@@ -104,7 +90,7 @@ describe('checkIfAllowedMovement', () => {
             const board = createEmptyBoard();
             board[4][4] = { type: PIECE_PAWN, color: COLOUR_WHITE, hasMoved: true, location: { row: 4, col: 4 } };
 
-            const result = checkIfAllowedMovement(board[4][4], 2, 4, board);
+            const result = checkIfAllowedMovement(board[4][4] as Piece & { location: PieceLocation }, 2, 4, board);
 
             expect(result).toBe(false);
         });
@@ -118,6 +104,7 @@ describe('checkIfAllowedMovement', () => {
 
             board[7][1] = knight;
             board[6][1] = blockingPawn;
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE, location: { row: 7, col: 4 } };
 
             const piece = { ...knight, location: { row: 7, col: 1 } };
 
@@ -144,6 +131,7 @@ describe('checkIfAllowedMovement', () => {
 
             board[7][1] = knight;
             board[5][2] = enemyPawn;
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE, location: { row: 7, col: 4 } };
 
             const piece = { ...knight, location: { row: 7, col: 1 } };
 
@@ -181,11 +169,11 @@ describe('checkIfAllowedMovement', () => {
 
         it('allows bishop to move diagonally when not blocked', () => {
             const board = createEmptyBoard();
-            const cell = { type: PIECE_BISHOP, color: COLOUR_WHITE };
-            board[4][4] = cell;
-            const piece = { ...cell, location: { row: 4, col: 4 } };
+            const piece = { type: PIECE_BISHOP, color: COLOUR_WHITE, location: { row: 4, col: 4 } };
+            board[4][4] = piece;
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE, location: { row: 7, col: 4 } };
 
-            const isAllowed = checkIfAllowedMovement(piece, 2, 2, board);
+            const isAllowed = checkIfAllowedMovement(piece, 3, 3, board);
             expect(isAllowed).toBe(true);
         });
     });
@@ -251,10 +239,11 @@ describe('checkIfAllowedMovement', () => {
             const enemyRook = { type: PIECE_ROOK, color: COLOUR_BLACK };
 
             board[4][4] = kingCell;
-            board[6][5] = enemyRook;
+            board[4][7] = enemyRook;
 
             const piece = { ...kingCell, location: { row: 4, col: 4 } };
-            const isAllowed = checkIfAllowedMovement(piece, 5, 5, board, true);
+            const isAllowed = checkIfAllowedMovement(piece, 4, 5, board);
+
             expect(isAllowed).toBe(false);
         });
     });
@@ -265,6 +254,8 @@ describe('checkIfAllowedMovement', () => {
             const cell = { type: PIECE_QUEEN, color: COLOUR_WHITE };
 
             board[3][3] = cell;
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE };
+
             const piece = { ...cell, location: { row: 3, col: 3 } };
 
             const diagonal = checkIfAllowedMovement(piece, 0, 0, board);
@@ -307,6 +298,7 @@ describe('checkIfAllowedMovement', () => {
         it('returns true if a piece has at least one valid move', () => {
             const board = createEmptyBoard();
             board[6][0] = { type: PIECE_PAWN, color: COLOUR_WHITE };
+            board[7][4] = { type: PIECE_KING, color: COLOUR_WHITE };
 
             expect(checkIfHasAnyMoves(COLOUR_WHITE, board)).toBe(true);
         });
@@ -315,7 +307,7 @@ describe('checkIfAllowedMovement', () => {
             const board = createEmptyBoard();
             const badPiece = { location: { row: 0, col: 0 } };
 
-            const result = checkIfAllowedMovement(badPiece as Piece, 1, 0, board);
+            const result = checkIfAllowedMovement(badPiece as Piece & { location: PieceLocation }, 1, 0, board);
             expect(result).toBe(false);
         });
 

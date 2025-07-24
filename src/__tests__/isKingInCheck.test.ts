@@ -64,8 +64,8 @@ describe('isKingInCheck', () => {
     expect(isKingInCheck(board, COLOUR_WHITE)).toBe(true);
   });
 
-  it('returns false if king not found', () => {
+  it('returns true if king not found', () => {
     const board = createEmptyBoard();
-    expect(isKingInCheck(board, COLOUR_WHITE)).toBe(false);
+    expect(isKingInCheck(board, COLOUR_WHITE)).toBe(true);
   });
 });

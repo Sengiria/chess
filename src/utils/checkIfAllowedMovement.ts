@@ -2,9 +2,9 @@ import { COLOUR_BLACK, COLOUR_WHITE, PIECE_BISHOP, PIECE_KING, PIECE_KNIGHT, PIE
 import type { Piece, PieceLocation } from "../interface";
 import { isKingInCheck } from "./isKingInCheck";
 
-export const checkIfAllowedMovement = (selectedPiece: Piece, newRow: number, newCol: number, board: (Piece | null)[][], isInCheck?: boolean, enPassantTarget?: PieceLocation | null): boolean => {
+export const checkIfAllowedMovement = (selectedPiece: Piece & { location: PieceLocation }, newRow: number, newCol: number, board: (Piece | null)[][], skipKingSafetyCheck = false, enPassantTarget?: PieceLocation | null): boolean => {
     // Prevent out-of-bounds moves
-    if (newRow < 0 || newRow > 7 || newCol < 0 || newCol > 7 || !selectedPiece.location ) return false;
+    if (newRow < 0 || newRow > 7 || newCol < 0 || newCol > 7) return false;
 
     const { location: { row, col } } = selectedPiece;
 
@@ -42,16 +42,24 @@ export const checkIfAllowedMovement = (selectedPiece: Piece, newRow: number, new
             break;
     }
     // Calculate if the king is in check after the chosen action 
-    if (isInCheck) {
-        // Simulate the move
-        const simulatedBoard = board.map(row => [...row]);
-        simulatedBoard[newRow][newCol] = { ...selectedPiece, hasMoved: true };
-        simulatedBoard[row][col] = null;
+    // Simulate the move
+    if (!skipKingSafetyCheck) {
+        const simulatedBoard = board.map((r, rIdx) =>
+            r.map((cell, cIdx) =>
+                cell ? { ...cell, location: { row: rIdx, col: cIdx } } : null
+            )
+        );
+        simulatedBoard[newRow][newCol] = {
+            ...selectedPiece,
+            location: { row: newRow, col: newCol },
+            hasMoved: true,
+        };
+        simulatedBoard[selectedPiece.location.row][selectedPiece.location.col] = null;
 
-        // Prevent the move if it doesn't remove the check
-        const stillInCheck = isKingInCheck(simulatedBoard, selectedPiece.color);
-        if (stillInCheck) return false;
+        const wouldBeInCheck = isKingInCheck(simulatedBoard, selectedPiece.color);
+        if (wouldBeInCheck) return false;
     }
+
 
     return isAllowed;
 }
@@ -201,7 +209,7 @@ export const checkIfHasAnyMoves = (color: string, board: (Piece | null)[][]): bo
                 const selectedPiece = { ...piece, location: { row: r, col: c } };
                 for (let targetR = 0; targetR < board.length; targetR++) {
                     for (let targetC = 0; targetC < board[targetR].length; targetC++) {
-                        const isValid = checkIfAllowedMovement(selectedPiece, targetR, targetC, board, true)
+                        const isValid = checkIfAllowedMovement(selectedPiece, targetR, targetC, board)
                         if (isValid) return true;
                     }
 

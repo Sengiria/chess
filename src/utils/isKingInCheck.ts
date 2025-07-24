@@ -2,11 +2,11 @@
 import { PIECE_KING } from "../constants";
 import type { Piece, PieceLocation } from "../interface";
 import { checkIfAllowedMovement } from "./checkIfAllowedMovement";
+import { hasLocation } from "./typeGuards";
 
 export const isKingInCheck = (board: (Piece | null)[][], color: string): boolean => {
     let kingPosition: PieceLocation | null = null;
 
-    // King of the given color
     for (let row = 0; row < board.length; row++) {
         for (let col = 0; col < board[row].length; col++) {
             const piece = board[row][col];
@@ -18,7 +18,7 @@ export const isKingInCheck = (board: (Piece | null)[][], color: string): boolean
         if (kingPosition) break;
     }
 
-    if (!kingPosition) return false;
+    if (!kingPosition) return true;
 
     for (let row = 0; row < board.length; row++) {
         for (let col = 0; col < board[row].length; col++) {
@@ -28,7 +28,7 @@ export const isKingInCheck = (board: (Piece | null)[][], color: string): boolean
                     ...piece,
                     location: piece.location || { row, col }
                 };
-                const canAttack = checkIfAllowedMovement(attackingPiece, kingPosition.row, kingPosition.col, board);
+                const canAttack = hasLocation(attackingPiece) && checkIfAllowedMovement(attackingPiece, kingPosition.row, kingPosition.col, board, true);
                 if (canAttack) return true;
             }
         }

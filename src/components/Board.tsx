@@ -10,9 +10,10 @@ interface BoardProps {
     pendingPromotion: PromotionInfo | null
     handlePromotion: (pieceType: Piece["type"]) => void;
     gameOver: null | { winner: typeof COLOUR_WHITE | typeof COLOUR_BLACK | typeof GAME_STATE_TIE };
+    lastMove: { from: { row: number; col: number }; to: { row: number; col: number } } | null;
 }
 
-const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPiece, pendingPromotion, handlePromotion, gameOver }) => {
+const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPiece, pendingPromotion, handlePromotion, gameOver, lastMove }) => {
     return (
         <div className="w-full max-w-[500px] aspect-square sm:aspect-auto bg-[#996140]">
             <div className="flex justify-between text-white font-bold text-xs mb-1 px-[28px]">
@@ -51,6 +52,19 @@ const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPiece, pendin
                                     selectedPiece?.location &&
                                     selectedPiece.location.row === rowIndex &&
                                     selectedPiece.location.col === colIndex;
+                                const isLastMoveFrom =
+                                    lastMove?.from.row === rowIndex && lastMove?.from.col === colIndex;
+
+                                const isLastMoveTo =
+                                    lastMove?.to.row === rowIndex && lastMove?.to.col === colIndex;
+
+                                const highlightRing = isSelected
+                                    ? "ring-2 ring-yellow-500 z-40"
+                                    : isLastMoveFrom
+                                        ? "ring-2 ring-green-500 z-30 "
+                                        : isLastMoveTo
+                                            ? "ring-2 ring-green-300 z-30 animate-pulse "
+                                            : "";
 
                                 return (
                                     <button
@@ -59,6 +73,7 @@ const Board: React.FC<BoardProps> = ({ matrix, handleMove, selectedPiece, pendin
                                         className={`w-full h-full flex items-center justify-center ${squareColor} 
                   cursor-pointer transition-all duration-200 
                   hover:ring-2 hover:ring-yellow-500 hover:z-40
+                  ${highlightRing}
                   ${isSelected ? "ring-2 ring-yellow-500 z-40" : ""}
               `}
                                     >

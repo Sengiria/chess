@@ -1,14 +1,24 @@
 import { COLOUR_WHITE, GAME_STATE_TIE, type COLOUR_BLACK } from "./constants";
 
 export interface PieceLocation {
-    row: number,
-    col: number,
+  row: number,
+  col: number,
 }
 export interface Piece {
-    type: string,
-    color: string,
-    hasMoved?: boolean,
-    location?: PieceLocation
+  type: string,
+  color: string,
+  hasMoved?: boolean,
+  location?: PieceLocation
+}
+
+export interface Movement {
+  from: {
+    row: number, col: number
+  },
+  to: {
+    row: number,
+    col: number
+  }
 }
 
 export interface PromotionInfo {

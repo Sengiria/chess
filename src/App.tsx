@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import Board from './components/Board'
-import type { CurrentPlayer, GameOverState, Piece, PieceLocation, PromotionInfo } from './interface'
+import type { CurrentPlayer, GameOverState, Movement, Piece, PieceLocation, PromotionInfo } from './interface'
 import { checkIfHasAnyMoves } from './utils/checkIfAllowedMovement'
 import { isKingInCheck } from './utils/isKingInCheck'
 import { COLOUR_BLACK, COLOUR_WHITE, GAME_STATE_TIE, INITIAL_BOARD } from './constants'
@@ -19,6 +19,7 @@ const App = () => {
   const [checkMessageVisible, setCheckMessageVisible] = useState<boolean>(false);
   const [enPassantTarget, setEnPassantTarget] = useState<null | PieceLocation>(null);
   const [playerInCheck, setPlayerInCheck] = useState<null | CurrentPlayer>(null);
+  const [lastMove, setLastMove] = useState<Movement | null>(null);
 
   useEffect(() => {
     handleStockfishStartup().then((ready) => {
@@ -35,6 +36,7 @@ const App = () => {
       getBestMoveFromAI(board).then((move) => {
         if (move?.piece) {
           movement(
+            setLastMove,
             move.to.row,
             move.to.col,
             { ...move.piece, location: move.from },
@@ -89,6 +91,7 @@ const App = () => {
 
     if (selectedPiece && hasLocation(selectedPiece)) {
       movement(
+        setLastMove,
         row,
         col,
         selectedPiece,
@@ -132,7 +135,7 @@ const App = () => {
           You are in Check!
         </div>
       )}
-      <Board matrix={board} handleMove={handleMove} selectedPiece={selectedPiece} pendingPromotion={pendingPromotion} handlePromotion={handlePromotion} gameOver={gameOver} />
+      <Board lastMove={lastMove} matrix={board} handleMove={handleMove} selectedPiece={selectedPiece} pendingPromotion={pendingPromotion} handlePromotion={handlePromotion} gameOver={gameOver} />
     </div>
   )
 }

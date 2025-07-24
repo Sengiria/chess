@@ -1,8 +1,9 @@
 import { COLOUR_BLACK, COLOUR_WHITE, PIECE_KING, PIECE_PAWN, PIECE_QUEEN } from "../constants";
-import type { CurrentPlayer, Piece, PieceLocation, PromotionInfo } from "../interface";
+import type { CurrentPlayer, Movement, Piece, PieceLocation, PromotionInfo } from "../interface";
 import { checkIfAllowedMovement } from "./checkIfAllowedMovement";
 
 export const movement = (
+    setLastMove: React.Dispatch<React.SetStateAction<Movement | null>>,
     newRow: number,
     newCol: number,
     selectedPiece: Piece & { location: PieceLocation },
@@ -85,6 +86,7 @@ if (selectedPiece.type === PIECE_PAWN && ((selectedPiece.color === COLOUR_WHITE 
     }
 
     setBoard(newBoard);
+    setLastMove({ from: { row: selectedPiece.location.row, col: selectedPiece.location.col }, to: { row: newRow, col: newCol } });
     setSelectedPiece(null);
     setCurrentPlayer(prev => (prev === COLOUR_WHITE ? COLOUR_BLACK : COLOUR_WHITE));
 }

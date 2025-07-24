@@ -1,4 +1,4 @@
-import { COLOUR_BLACK, COLOUR_WHITE, PIECE_KING, PIECE_PAWN } from "../constants";
+import { COLOUR_BLACK, COLOUR_WHITE, PIECE_KING, PIECE_PAWN, PIECE_QUEEN } from "../constants";
 import type { CurrentPlayer, Piece, PieceLocation, PromotionInfo } from "../interface";
 import { checkIfAllowedMovement } from "./checkIfAllowedMovement";
 
@@ -57,13 +57,28 @@ export const movement = (
         setEnPassantTarget(null);
     }
 
-    if (selectedPiece.type === PIECE_PAWN && ((selectedPiece.color === COLOUR_WHITE && newRow === 0) || (selectedPiece.color === COLOUR_BLACK && newRow === 7))) {
-        setPendingPromotion({ row: newRow, col: newCol, color: selectedPiece.color });
-        newBoard[row][col] = null;
-        setBoard(newBoard);
-        resetSelection()
-        return;
-    }
+if (selectedPiece.type === PIECE_PAWN && ((selectedPiece.color === COLOUR_WHITE && newRow === 0) || (selectedPiece.color === COLOUR_BLACK && newRow === 7))) {
+  if (isAIMove) {
+    newBoard[newRow][newCol] = {
+      type: PIECE_QUEEN,
+      color: selectedPiece.color,
+      hasMoved: true,
+      location: {
+        row: newRow,
+        col: newCol,
+      },
+    };
+    newBoard[row][col] = null;
+    setBoard(newBoard);
+    setCurrentPlayer(prev => (prev === COLOUR_WHITE ? COLOUR_BLACK : COLOUR_WHITE));
+  } else {
+    setPendingPromotion({ row: newRow, col: newCol, color: selectedPiece.color });
+    newBoard[row][col] = null;
+    setBoard(newBoard);
+    resetSelection();
+  }
+  return;
+}
     if (selectedPiece.type === PIECE_PAWN && enPassantTarget && newRow === enPassantTarget.row && newCol === enPassantTarget.col && board[row][newCol]?.type === PIECE_PAWN) {
         newBoard[row][newCol] = null;
         setEnPassantTarget(null);
